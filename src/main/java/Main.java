@@ -1,19 +1,26 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 
 public class Main {
     private final static String yandexKey = "bb26f92d-618f-4ec8-a338-b8bd5aadc5ba";
     private final static String yandexApiKeyHeaderName = "X-Yandex-API-Key";
-    private final static String lat = "59.939099";
-    private final static String lon = "30.315877";
+    private final static String lat = "59.939079";
+    private final static String lon = "30.315766";
 
     public static void main(String[] args) throws IOException {
 
         OkHttpClient client = new OkHttpClient();
+        ObjectMapper mapper = new ObjectMapper();
 
         HttpUrl url = new HttpUrl.Builder()
                 .scheme("https")
@@ -36,16 +43,37 @@ public class Main {
         Response response = client.newCall(request).execute();
 
         if(response.code() == 200) {
+            Map<String, Object> responseMap = mapper.readValue(response.body().string(), Map.class);
+            Map geoObject = (Map) responseMap.get("geo_object");
+            Map locality = (Map) geoObject.get("locality");
 
-            System.out.println(response.body().string());
+            String city = locality.get("name").toString();
 
+            List dataList = (ArrayList) responseMap.get("forecasts");
+
+            for (Object oneDayData: dataList) {
+                Map oneDayMap = (Map) oneDayData;
+                String date = oneDayMap.get("date").toString();
+
+                Map parts = (Map) oneDayMap.get("parts");
+                Map night = (Map) parts.get("night");
+                int nightTemperature = Integer.parseInt(night.get("temp_avg").toString());
+                String nightConditionKey = night.get("condition").toString();
+
+                Map day = (Map) parts.get("day");
+                int dayTemperature = Integer.parseInt(day.get("temp_avg").toString());
+                String dayConditionKey = day.get("condition").toString();
+
+                Weather weather = new Weather(city, date, nightTemperature, dayTemperature,
+                        References.yandexApiConditions.getOrDefault(nightConditionKey, nightConditionKey),
+                        References.yandexApiConditions.getOrDefault(dayConditionKey, dayConditionKey));
+                System.out.println(weather);
             }
-
-        else {
+        } else {
             System.out.println("Что-то пошло не так... " + response.code());
         }
-
     }
 }
+
 
 
