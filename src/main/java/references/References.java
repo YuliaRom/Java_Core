@@ -1,3 +1,5 @@
+package references;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +23,7 @@ public class References {
         put("cloudy-and-light-snow", "облачно, небольшой снег");
         put("overcast-and-light-snow", "значительная облачность, небольшой снег");
         put("cloudy-and-snow", "облачно, снег");
+        put("light-rain","небольшой дождь");
     }};
 }
 
